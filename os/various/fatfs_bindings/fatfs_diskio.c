@@ -166,6 +166,10 @@ DRESULT disk_read (
     while (count > 0) {
       if (mmcSequentialRead(&FATFS_HAL_DEVICE, buff))
         return RES_ERROR;
+      
+      // invalidate cache over read buffer to ensure that content from DMA is read
+      cacheBufferInvalidate(buff, MMCSD_BLOCK_SIZE);
+
       buff += MMCSD_BLOCK_SIZE;
       count--;
     }
@@ -178,6 +182,8 @@ DRESULT disk_read (
       return RES_NOTRDY;
     if (sdcRead(&FATFS_HAL_DEVICE, sector, buff, count))
       return RES_ERROR;
+    // invalidate cache over read buffer to ensure that content from DMA is read
+    cacheBufferInvalidate(buff, MMCSD_BLOCK_SIZE*count);
     return RES_OK;
 #endif
 #if HAL_USBH_USE_MSD
